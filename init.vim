@@ -221,6 +221,7 @@ local on_attach = function(client, bufnr)
   })
 end
 
+
 local capabilities = require('cmp_nvim_lsp').update_capabilities(vim.lsp.protocol.make_client_capabilities())
 lspconfig.rust_analyzer.setup {
   on_attach = on_attach,
@@ -360,7 +361,7 @@ command! -bang -nargs=* Rg
 
 function! s:list_cmd()
   let base = fnamemodify(expand('%'), ':h:.:S')
-  return base == '.' ? 'fd --type file --follow' : printf('fd --type file --follow | proximity-sort %s', shellescape(expand('%')))
+  return base == '.' ? 'fdfind --type file --follow' : printf('fdfind --type file --follow | proximity-sort %s', shellescape(expand('%')))
 endfunction
 
 command! -bang -nargs=? -complete=dir Files
