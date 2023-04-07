@@ -1,5 +1,11 @@
-set rtp+=~/dev/others/base16/templates/vim/
+set shell=/bin/bash
+let mapleader = "\<Space>"
+
+
+set rtp+=~/.config/nvim/colors/
+set termencoding=utf-8
 set encoding=utf-8
+set fileencodings=utf-8,ucs-bom,gbk,cp936,gb2312,gb18030
 set nocompatible            " disable compatibility to old-time vi
 set showmatch               " show matching 
 set ignorecase              " case insensitive 
@@ -32,27 +38,18 @@ set noshowmode
 set backspace=2
 set nofoldenable
 set lazyredraw
-set colorcolumn=80
 set showcmd
-
-
+map <C-a> <Nop>
+map <C-x> <Nop>
+nmap Q <Nop>
+" toggle relative numbering
+nnoremap <C-n> :set rnu!<CR>
 au TextYankPost * silent! lua vim.highlight.on_yank({timeout=200})
 
 if &term =~ '^screen'
     set ttymouse=xterm2
 endif
 
-" unbind key
-map <C-a> <Nop>
-map <C-x> <Nop>
-nmap Q <Nop>
-
-" toggle relative numbering
-nnoremap <C-n> :set rnu!<CR>
-
-" set spell                 " enable spell check (may need to download language package)
-" set noswapfile            " disable creating swap file
-" set backupdir=~/.cache/vim " Directory to store backup files.
 call plug#begin("~/.vim/plugged") 
 " Plugin Section 
 Plug 'tpope/vim-surround'
@@ -91,16 +88,16 @@ Plug 'godlygeek/tabular'
 Plug 'plasticboy/vim-markdown'
 Plug 'lervag/vimtex'
 
+Plug 'nvim-treesitter/nvim-treesitter', {'do': ':TSUpdate'}
 Plug 'preservim/nerdtree' 
+Plug 'nvim-lua/plenary.nvim'
+Plug 'nvim-telescope/telescope.nvim', { 'branch': '0.1.x' }
 Plug 'preservim/nerdcommenter' 
 Plug 'mhinz/vim-startify' 
 Plug 'ryanoasis/vim-devicons' 
 Plug 'chriskempson/base16-vim'
 call plug#end()
-" plug ultisnips
 
-
-" color schemes
 if (has("termguicolors"))
     set termguicolors
 endif
@@ -118,7 +115,6 @@ nnoremap <C-l> <C-w>l
 
 " nerdtree
 nnoremap <Leader>n :NERDTreeToggle<CR>
-nnoremap <Leader>f :NERDTreeFind<CR>
 
 if has('nvim')
     set guicursor=n-v-c:block-Cursor/lCursor-blinkon0,i-ci:ver25-Cursor/lCursor,r-cr:hor20-Cursor/lCursor
@@ -136,7 +132,7 @@ if (match($TERM, "-256color") != -1) && (match($TERM, "screen-256color") == -1)
 endif
 set background=dark
 let base16colorspace=256
-let g:base16_shell_path="~/dev/others/base16/templates/shell/scripts/"
+let g:base16_shell_path="~/.config/base16-shell/scripts/"
 colorscheme base16-gruvbox-dark-hard
 syntax on
 hi Normal ctermbg=NONE
@@ -169,7 +165,12 @@ cmp.setup({
   },
   sources = cmp.config.sources({
     -- TODO: currently snippets from lsp end up getting prioritized -- stop that!
-    { name = 'nvim_lsp' },
+    { 
+            name = 'nvim_lsp' ,
+            entry_filter = function(entry)
+                return require("cmp").lsp.CompletionItemKind.Snippet ~= entry:get_kind()
+            end
+    },
   }, {
     { name = 'path' },
   }),
@@ -222,7 +223,7 @@ local on_attach = function(client, bufnr)
 end
 
 
-local capabilities = require('cmp_nvim_lsp').update_capabilities(vim.lsp.protocol.make_client_capabilities())
+local capabilities = require('cmp_nvim_lsp').default_capabilities(vim.lsp.protocol.make_client_capabilities())
 lspconfig.rust_analyzer.setup {
   on_attach = on_attach,
   flags = {
@@ -294,18 +295,18 @@ let g:vimtex_quickfix_mode=0
 set conceallevel=1
 let g:tex_conceal='abdmg'
 
+" rust
+let g:rustfmt_autosave = 1
+let g:rustfmt_emit_files = 1
+let g:rustfmt_fail_silently = 0
+let g:rust_clip_command = 'xclip -selection clipboard'
+
 " Open hotkeys
 map <C-p> :Files<CR>
 nmap <leader>; :Buffers<CR>
 
 " Quick-save
 nmap <leader>w :w<CR>
-
-" rust
-let g:rustfmt_autosave = 1
-let g:rustfmt_emit_files = 1
-let g:rustfmt_fail_silently = 0
-let g:rust_clip_command = 'xclip -selection clipboard'
 
 " Completion
 " Better completion
@@ -345,9 +346,6 @@ set wildignore=.hg,.svn,*~,*.png,*.jpg,*.gif,*.settings,Thumbs.db,*.min.js,*.swp
 " ; as :
 nnoremap ; :
 
-" Ctrl+h to stop searching
-vnoremap <C-h> :nohlsearch<cr>
-nnoremap <C-h> :nohlsearch<cr>
 
 " <leader>s for Rg search
 noremap <leader>s :Rg
@@ -442,3 +440,23 @@ autocmd Filetype html,xml,xsl,php source ~/.config/nvim/scripts/closetag.vim
 if has('nvim')
     runtime! plugin/python_setup.vim
 endif
+
+"cpp
+function! s:JbzCppMan()
+    let old_isk = &iskeyword
+    setl iskeyword+=:
+    let str = expand("<cword>")
+    let &l:iskeyword = old_isk
+    execute 'Man ' . str
+endfunction
+
+command! JbzCppMan :call s:JbzCppMan()
+
+au FileType cpp nnoremap <buffer>K :JbzCppMan<CR>
+
+"telescope
+" Using Lua functions
+nnoremap <leader>ff <cmd>lua require('telescope.builtin').find_files()<cr>
+nnoremap <leader>fg <cmd>lua require('telescope.builtin').live_grep()<cr>
+nnoremap <leader>fb <cmd>lua require('telescope.builtin').buffers()<cr>
+nnoremap <leader>fh <cmd>lua require('telescope.builtin').help_tags()<cr>
