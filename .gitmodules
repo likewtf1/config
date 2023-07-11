@@ -1,0 +1,3 @@
+[submodule "editor/nvim/colors/base16"]
+	path = editor/nvim/colors/base16
+	url = https://github.com/tinted-theming/base16-vim.git
